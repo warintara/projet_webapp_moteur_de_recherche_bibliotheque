@@ -11,10 +11,3 @@ python3 -m venv myDAARenv
 source myDAARenv/bin/activate
 pip install -r requirements.txt
 ```
-
-### 2. Démarrer un projet Django
-```bash 
-django-admin startproject mySearchEngine
-cd mySearchEngine
-python3 manage.py startapp mygutenberg
-```
