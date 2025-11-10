@@ -1,1 +1,20 @@
-# projet_webapp_moteur_de_recherche_bibliotheque
+# Projet DAAR 2025 — Moteur de recherche (mySearchEngine)
+
+## ⚙️ Installation et environnement
+
+Ce projet utilise **Django + Django REST Framework** pour le backend,  
+et un environnement virtuel Python pour isoler les dépendances.
+
+### 1. Créer un environnement virtuel
+```bash
+python3 -m venv myDAARenv
+source myDAARenv/bin/activate
+pip install -r requirements.txt
+```
+
+### 2. Démarrer un projet Django
+```bash 
+django-admin startproject mySearchEngine
+cd mySearchEngine
+python3 manage.py startapp mygutenberg
+```
