@@ -11,3 +11,8 @@ python3 -m venv myDAARenv
 source myDAARenv/bin/activate
 pip install -r requirements.txt
 ```
+### 2. Lancer le serveur 
+```bash
+cd cd mySearchEngine/
+python3 manage.py runserver
+```
