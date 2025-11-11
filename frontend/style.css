@@ -1,0 +1,66 @@
+.montype {
+  font-family: 'Courier New', monospace; /* ton font */
+  font-size: 20px;                        /* taille spécifique */
+  color: #ff6600;                         /* couleur spécifique */
+  font-weight: bold;                       /* gras */
+}
+body {
+    display: flex;               /* active flexbox */
+    justify-content: center;     /* centre horizontalement */
+    align-items: center;         /* centre verticalement */
+    height: 100vh;               /* hauteur = hauteur de la fenêtre */
+    margin: 0;                   /* supprimer les marges par défaut */
+    flex-direction: column;      /* empiler les éléments verticalement */
+    text-align: center;          /* centre le texte dans chaque élément */
+}
+
+.btn-group {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.button {
+    background-color: #aa4604;
+    color: beige;
+    margin: 5px;
+    border-radius: 8px;
+    font-size: 16px;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+
+
+    width: 150px;   
+    height: 50px;   
+    display: flex;  /* pour centrer le texte à l’intérieur */
+    justify-content: center;
+    align-items: center;
+}
+
+
+.btn-group .button:hover {
+  background-color: rgb(196, 124, 206);
+}
+
+/* pour le page find books*/
+input[type=text] {
+  float: right;
+  padding: 6px;
+  margin-top: 8px;
+  margin-right: 16px;
+  font-size: 17px;
+  width: 150px;  
+  
+}
+
+/* pour les suggesstions des langues*/
+select{
+  float: right;
+  padding: 6px;
+  margin-top: 8px;
+  margin-right: 16px;
+  font-size: 17px;
+  width: 150px;  
+}
+

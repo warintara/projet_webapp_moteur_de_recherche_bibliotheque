@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1 class="montype">DAAR E-Book Reader</h1>
+
+    <!-- Barre de recherche -->
+    <div>
+      <input type="text" id="searchInput" placeholder="Search..." />
+      <select id="languageSelect">
+        <option value="">🌍 All languages</option>
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+        <option value="es">Español</option>
+        <option value="de">Deutsch</option>
+        <option value="it">Italiano</option>
+      </select>
+      <button id="searchBtn" class="button">Search</button>
+    </div>
+
+    <!-- Résultats -->
+    <div id="results"></div>
+
+    <!-- Retour -->
+    <p class="button" id="findHome">Go back to main page</p>
+
+    <script>
+      // Retour à la page principale
+      const findHomeBtn = document.getElementById("findHome");
+      findHomeBtn.addEventListener("click", function () {
+        window.location.href = "Index.html";
+      });
+
+      // Recherche
+      const searchBtn = document.getElementById("searchBtn");
+      const resultsDiv = document.getElementById("results");
+
+      searchBtn.addEventListener("click", async function () {
+        const query = document.getElementById("searchInput").value;
+        const language = document.getElementById("languageSelect").value;
+        resultsDiv.innerHTML = "<p>Loading...</p>";
+
+        try {
+          // 🔗 Requête vers ton backend Django
+          const response = await fetch(
+            `http://127.0.0.1:8000/books/?search=${query}&language=${language}`
+          );
+          const data = await response.json();
+
+          resultsDiv.innerHTML = "";
+          if (!data.results || data.results.length === 0) {
+            resultsDiv.innerHTML = "<p>No results found.</p>";
+            return;
+          }
+
+          data.results.forEach((book) => {
+            const p = document.createElement("p");
+            const authors = book.authors
+              ? book.authors.map((a) => a.name).join(", ")
+              : "Unknown author";
+            p.textContent = `${book.title} — ${authors} (${book.languages?.join(", ")})`;
+            resultsDiv.appendChild(p);
+          });
+        } catch (error) {
+          resultsDiv.innerHTML = `<p style="color:red">Erreur: ${error}</p>`;
+        }
+      });
+    </script>
+  </body>
+</html>
