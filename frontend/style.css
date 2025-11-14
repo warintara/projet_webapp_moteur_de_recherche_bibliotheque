@@ -64,3 +64,21 @@ select{
   width: 150px;  
 }
 
+.book-card {
+  background-color: #f6f6f6;
+  padding: 15px;
+  margin: 15px;
+  border-radius: 10px;
+  width: 300px;
+  display: inline-block;
+  vertical-align: top;
+  text-align: left;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.cover {
+  width: 100%;
+  height: auto;
+  border-radius: 5px;
+}
+
