@@ -31,8 +31,8 @@ def book_list(request):
 
 # liste des livres par language
 @api_view(['GET'])
-def book_langagage(request, langage):
-    url = f"{BASE_URL}?language={langage}"
+def book_langagage(request, language):
+    url = f"{BASE_URL}?languages={language}"
     response = requests.get(url)
     return Response(response.json())
 
