@@ -1,84 +1,203 @@
+/* -----------------------------------------------------------
+   TITRE GÉNÉRAL
+----------------------------------------------------------- */
 .montype {
-  font-family: 'Courier New', monospace; /* ton font */
-  font-size: 20px;                        /* taille spécifique */
-  color: #ff6600;                         /* couleur spécifique */
-  font-weight: bold;                       /* gras */
+    font-family: 'Courier New', monospace;
+    font-size: 34px;
+    color: #ff6600;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 40px;
 }
+
+/* -----------------------------------------------------------
+   LAYOUT GLOBAL
+----------------------------------------------------------- */
 body {
-    display: flex;               /* active flexbox */
-    justify-content: center;     /* centre horizontalement */
-    align-items: center;         /* centre verticalement */
-    height: 100vh;               /* hauteur = hauteur de la fenêtre */
-    margin: 0;                   /* supprimer les marges par défaut */
-    flex-direction: column;      /* empiler les éléments verticalement */
-    text-align: center;          /* centre le texte dans chaque élément */
+    margin: 0;
+    padding: 0;
+    background: #fafafa;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+/* -----------------------------------------------------------
+   BARRE DE RECHERCHE
+----------------------------------------------------------- */
+#searchInput {
+    margin-top: 25px;
+    padding: 10px 14px;
+    width: 380px;
+    font-size: 17px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+button {
+    padding: 10px 22px;
+    background: #aa4604;
+    color: beige;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+button:hover {
+    background: #c46700;
+}
+
+/* -----------------------------------------------------------
+   GRILLE DES LIVRES : 3 COLONNES / 3 LIGNES PAR PAGE
+----------------------------------------------------------- */
+#results, 
+#regexResults {
+    width: 90%;
+    margin: 30px auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 35px;
+}
+
+/* -----------------------------------------------------------
+   CARTE LIVRE
+----------------------------------------------------------- */
+.book-card, 
+.result {
+    background: #fff;
+    padding: 18px;
+    border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.10);
+    text-align: center;
+    transition: 0.2s;
+}
+
+.book-card:hover, 
+.result:hover {
+    transform: scale(1.03);
+}
+
+/* -----------------------------------------------------------
+   IMAGE DE COUVERTURE
+----------------------------------------------------------- */
+.book-card img, 
+.result img {
+    width: 130px;
+    height: 190px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+/* -----------------------------------------------------------
+   TEXTE LIVRE
+----------------------------------------------------------- */
+.book-card h3,
+.result h3 {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 8px 0;
+}
+
+.book-card p,
+.result p {
+    font-size: 13px;
+    margin: 3px 0;
+}
+
+/* -----------------------------------------------------------
+   PAGINATION
+----------------------------------------------------------- */
+.pagination {
+    margin-top: 20px;
+    margin-bottom: 50px;
+}
+
+.pagination button {
+    margin: 8px;
+    font-size: 15px;
+}
+
+/* -----------------------------------------------------------
+   PAGE D’ACCUEIL
+----------------------------------------------------------- */
+.home {
+    text-align: center;
+    padding-top: 70px;
+}
+
+.home-title {
+    font-size: 42px;
+    color: #ff6600;
+    letter-spacing: 2px;
+    margin-bottom: 35px;
+}
+
+.authors p {
+    font-size: 20px;
+    margin: 4px 0;
 }
 
 .btn-group {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.button {
-    background-color: #aa4604;
-    color: beige;
-    margin: 5px;
-    border-radius: 8px;
-    font-size: 16px;
-    padding: 15px 32px;
-    text-align: center;
-    text-decoration: none;
-    cursor: pointer;
-
-
-    width: 150px;   
-    height: 50px;   
-    display: flex;  /* pour centrer le texte à l’intérieur */
-    justify-content: center;
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
     align-items: center;
 }
 
-
-.btn-group .button:hover {
-  background-color: rgb(196, 124, 206);
+.button {
+    display: inline-block;
+    padding: 12px 25px;
+    background-color: #b84a00;
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 20px;
+    text-decoration: none;
+    transition: 0.2s;
+    width: 260px;
+    text-align: center;
 }
 
-/* pour le page find books*/
-input[type=text] {
-  float: right;
-  padding: 6px;
-  margin-top: 8px;
-  margin-right: 16px;
-  font-size: 17px;
-  width: 150px;  
-  
+.button:hover {
+    background-color: #d25a00;
+    transform: scale(1.05);
 }
 
-/* pour les suggesstions des langues*/
-select{
-  float: right;
-  padding: 6px;
-  margin-top: 8px;
-  margin-right: 16px;
-  font-size: 17px;
-  width: 150px;  
+/* -----------------------------------------------------------
+   RESPONSIVE MOBILE
+----------------------------------------------------------- */
+@media (max-width: 900px) {
+    #results, #regexResults {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
-.book-card {
-  background-color: #f6f6f6;
-  padding: 15px;
-  margin: 15px;
-  border-radius: 10px;
-  width: 300px;
-  display: inline-block;
-  vertical-align: top;
-  text-align: left;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+@media (max-width: 600px) {
+    #results, #regexResults {
+        grid-template-columns: repeat(1, 1fr);
+    }
+
+    #searchInput {
+        width: 85%;
+    }
+}
+/* Centrer toute la page */
+.center-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* toute la hauteur */
 }
 
-.cover {
-  width: 100%;
-  height: auto;
-  border-radius: 5px;
+/* Colonne principale */
+.content-box {
+    text-align: center;
 }
 
+/* Ajuste le bouton retour */
+.back-btn {
+    margin-top: 20px;
+    display: inline-block;
+}

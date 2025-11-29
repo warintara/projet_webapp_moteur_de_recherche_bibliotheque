@@ -1,23 +1,39 @@
 <!DOCTYPE html>
 <html lang="fr">
-    <head>
-        <meta charset="UTF-8">
-        <link rel="stylesheet" href="style.css">
-    </head>
-    <body>
-        <h1 class="montype"> DAAR E-Book Reader</h1>
-        <p> by Selma Belkadi</p>
-        <p> by Warintara Munsup</p>
-        <div class="btn-group">
-            <a class="button" href="https://gutenberg.org/" target="_blank"> The Gutenberg project </a>
-            <a class="button" href="https://www-npa.lip6.fr/~buixuan/daar2025" target="_blank"> UE DAAR </a>
-            <p class="button" id="findBooks"> Find books </p>
-        </div>
-        <script>
-            const findBooksBtn = document.getElementById("findBooks");
-            findBooksBtn.addEventListener("click", function() {
-                window.location.href = "findbooks.html";
-            });
-        </script>  
-    </body>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+    <title>DAAR E-Book Reader</title>
+</head>
+
+<body class="home">
+
+    <h1 class="montype home-title">DAAR E-Book Reader</h1>
+
+    <div class="authors">
+        <p>by <strong>Selma Belkadi</strong></p>
+        <p>by <strong>Warintara Munsup</strong></p>
+    </div>
+
+    <div class="btn-group">
+        <a class="button" href="https://gutenberg.org/" target="_blank">
+            The Gutenberg project
+        </a>
+
+        <a class="button" href="https://www-npa.lip6.fr/~buixuan/daar2025" target="_blank">
+            UE DAAR
+        </a>
+
+        <button class="button" id="findBooks">
+            Find books
+        </button>
+    </div>
+
+    <script>
+        document.getElementById("findBooks").onclick = () => {
+            window.location.href = "findbooks.html";
+        };
+    </script>
+
+</body>
 </html>

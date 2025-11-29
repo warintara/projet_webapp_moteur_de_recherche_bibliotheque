@@ -46,10 +46,16 @@ def dfa_match(dfa, text: str) -> bool:
     state = dfa.start
     for ch in text:
         code = ord(ch)
-        if code not in dfa.transitions.get(state, {}):
+
+        if state not in dfa.transitions:
             return False
+
+        if code not in dfa.transitions[state]:
+            return False
+
         state = dfa.transitions[state][code]
-    return state in dfa.finals
+
+    return state in dfa.final_states
 
 
 def tokenize_query(q):
@@ -74,16 +80,29 @@ def search_regex_engine(pattern):
     from NFA import regex_to_nfa
     from DFA import nfa_to_dfa, minimize_dfa_hopcroft
 
+    # 1) Construire DFA minimal
     nfa = regex_to_nfa(pattern)
     dfa = minimize_dfa_hopcroft(nfa_to_dfa(nfa))
 
-    matches = []
-    for doc_id, words in vocab.items():
-        text = " ".join(words)
-        if dfa_match(dfa, text):
-            matches.append(doc_id)
+    # 2) Trouver tous les mots de l'index qui matchent la regex
+    matching_words = []
+    for word in index.keys():
+        if dfa_match(dfa, word):      
+            matching_words.append(word)
 
-    return matches
+    # 3) Récupérer les documents correspondants
+    doc_scores = {}
+
+    for w in matching_words:
+        postings = index[w]          # {doc_id : tf }
+        for doc_id, tf in postings.items():
+            doc_scores[doc_id] = doc_scores.get(doc_id, 0) + tf
+
+    # 4) Tri par score décroissant
+    ranked_docs = sorted(doc_scores.items(), key=lambda x: x[1], reverse=True)
+
+    return ranked_docs
+
 
 
 def suggest_neighbors(doc_id, k=10):
@@ -108,7 +127,8 @@ def root():
     return {"message": "DAAR Search Engine API: OK"}
 
 @app.get("/search")
-def api_search(q: str):
+def api_search(q: str, page: int = 1, page_size: int = 9):
+
     ranked = search_normal(q)
     response = []
 
@@ -124,19 +144,48 @@ def api_search(q: str):
             "cover_url": meta.get("cover_url"),
         })
 
-    return response
+    return {
+        "total": len(ranked),
+        "page": 1,
+        "page_size": len(response),
+        "results": response,
+    }
+
 
 @app.get("/search_regex")
-def api_search_regex(pattern: str):
-    matches = search_regex_engine(pattern)
-    return [
-        {
-            "doc_id": d,
-            "title": metadata.get(d, {}).get("title"),
-            "author": metadata.get(d, {}).get("author"),
-        }
-        for d in matches
-    ]
+def api_search_regex(pattern: str, page: int = 1, page_size: int = 9):
+
+    ranked = search_regex_engine(pattern)
+
+    # Pagination backend
+    start = (page - 1) * page_size
+    end = start + page_size
+    paginated = ranked[start:end]
+
+    results = []
+
+    for entry in paginated:
+        # entry vient de search_regex_engine : (doc_id, score)
+        doc_id = entry[0]
+        score = entry[1]
+
+        meta = metadata.get(str(doc_id), {})
+
+        results.append({
+            "doc_id": doc_id,
+            "title": meta.get("title", "Unknown"),
+            "author": meta.get("author", "Unknown"),
+            "cover_image": meta.get("cover_url", None),
+            "score": score,
+        })
+
+    return {
+        "total": len(ranked),
+        "page": page,
+        "page_size": page_size,
+        "results": results,
+    }
+
 
 @app.get("/book/{doc_id}")
 def api_book(doc_id: str):

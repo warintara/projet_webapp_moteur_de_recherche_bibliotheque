@@ -69,3 +69,18 @@ python3 download_gutenberg_fr.py
          │ Résultats + suggestions│
          └────────────────────────┘
 ```
+
+### 5. Tester les fonctions 
+#### Pour app.py Depuis mySearchEngine :
+```bash
+uvicorn app:app --reload
+```
+on peut tester :
+
+http://127.0.0.1:8000/search?q=dragon
+
+http://127.0.0.1:8000/search_regex?pattern=dr.*n
+
+http://127.0.0.1:8000/book/52
+
+http://127.0.0.1:8000/suggest/52

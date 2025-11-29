@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="style.css" />
+    <title>Book Details</title>
+</head>
+
+<body>
+
+    <h1 class="montype">Book Details</h1>
+
+    <div id="bookContainer"></div>
+
+    <h2>Suggested Books</h2>
+    <div id="suggestions"></div>
+
+    <p class="button" id="backBtn">⬅ Back to search</p>
+
+    <script>
+        // --------- Utils : récupérer l’ID dans l’URL ---------
+        function getBookIdFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get("id");
+        }
+
+        const bookContainer = document.getElementById("bookContainer");
+        const suggestionsDiv = document.getElementById("suggestions");
+
+        // --------- Charger les détails du livre ---------
+        async function loadBookDetails(id) {
+            const url = `http://127.0.0.1:8000/book/${id}`;
+
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+
+                bookContainer.innerHTML = `
+                    <div class="book-card-detail">
+                        <h2>${data.title ?? "(No title)"}</h2>
+                        <p><strong>ID:</strong> ${data.id ?? id}</p>
+                        <p><strong>Author:</strong> ${data.author ?? "Unknown"}</p>
+                        <p><strong>Year:</strong> ${data.year ?? "Unknown"}</p>
+                        <p><strong>Downloads:</strong> ${data.downloads ?? "Unknown"}</p>
+                        ${data.cover_url ? `<img src="${data.cover_url}" class="cover" />` : ""}
+                    </div>
+                `;
+            } catch (err) {
+                bookContainer.innerHTML = `<p style="color:red">Error loading book: ${err}</p>`;
+            }
+        }
+
+        // --------- Charger les suggestions ---------
+        async function loadSuggestions(id) {
+            const url = `http://127.0.0.1:8000/suggest/${id}`;
+
+            try {
+                const res = await fetch(url);
+                const list = await res.json();
+
+                if (list.length === 0) {
+                    suggestionsDiv.innerHTML = "<p>No related books found.</p>";
+                    return;
+                }
+
+                list.forEach(book => {
+                    const div = document.createElement("div");
+                    div.className = "result";
+
+                    div.innerHTML = `
+                        <h3>${book.title ?? "(No title)"}</h3>
+                        <p><strong>ID:</strong> ${book.doc_id}</p>
+                        <p><strong>Author:</strong> ${book.author ?? "Unknown"}</p>
+                        <button onclick="openDetail('${book.doc_id}')">View details</button>
+                    `;
+
+                    suggestionsDiv.appendChild(div);
+                });
+
+            } catch (err) {
+                suggestionsDiv.innerHTML = `<p style="color:red">Error loading suggestions: ${err}</p>`;
+            }
+        }
+
+        // --------- Navigation ---------
+        function openDetail(id) {
+            window.location.href = `detail.html?id=${id}`;
+        }
+
+        document.getElementById("backBtn").onclick = () => {
+            window.location.href = "findbooks.html";
+        };
+
+        // --------- Initialisation ---------
+        const bookId = getBookIdFromURL();
+        if (bookId) {
+            loadBookDetails(bookId);
+            loadSuggestions(bookId);
+        } else {
+            bookContainer.innerHTML = "<p>No book ID provided.</p>";
+        }
+
+    </script>
+
+</body>
+</html>

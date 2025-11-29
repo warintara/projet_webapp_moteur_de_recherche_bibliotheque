@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+    <title>Résultats — DAAR Search</title>
+</head>
+
+<body>
+    <h1 class="montype">Résultats de recherche</h1>
+
+    <div id="results" class="results-grid"></div>
+
+    <div class="pagination">
+        <button id="prevBtn">Précédent</button>
+        <span id="pageInfo"></span>
+        <button id="nextBtn">Suivant</button>
+    </div>
+
+    <p class="button" onclick="window.location.href='Index.html'">Go back to main page</p>
+
+    <script>
+        // ==== UTILITAIRE ====
+        function getParam(name) {
+            const url = new URL(window.location.href);
+            return url.searchParams.get(name);
+        }
+
+        // ==== PARAMÈTRES ====
+        let query = getParam("q");
+        let page = parseInt(getParam("page") || "1");
+
+        if (!query) {
+            document.getElementById("results").innerHTML = "<p>Aucune recherche fournie.</p>";
+        } else {
+            loadPage();
+        }
+
+        // ==== CHARGER LES RÉSULTATS ====
+        async function loadPage() {
+            const url = `http://127.0.0.1:8000/search?q=${encodeURIComponent(query)}&page=${page}&page_size=9`;
+            const res = await fetch(url);
+            const data = await res.json();
+
+            display(data);
+        }
+
+        // ==== AFFICHAGE ====
+        function display(data) {
+            const div = document.getElementById("results");
+            div.innerHTML = "";
+
+            data.results.forEach(book => {
+                const card = document.createElement("div");
+                card.className = "book-card";
+
+                card.innerHTML = `
+                    <img src="${book.cover_image}" class="cover">
+                    <h3>${book.title}</h3>
+                    <p><strong>ID :</strong> ${book.doc_id}</p>
+                    <p><strong>Auteur :</strong> ${book.author}</p>
+                `;
+                div.appendChild(card);
+            });
+
+            // Pagination
+            document.getElementById("pageInfo").innerText = `Page ${data.page}`;
+
+            document.getElementById("prevBtn").onclick = () => {
+                if (page > 1) {
+                    page--;
+                    loadPage();
+                }
+            };
+            document.getElementById("nextBtn").onclick = () => {
+                if (data.results.length === 9) {
+                    page++;
+                    loadPage();
+                }
+            };
+        }
+    </script>
+
+</body>
+</html>
