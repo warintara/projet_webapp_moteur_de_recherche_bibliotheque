@@ -1,9 +1,19 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Query, HTTPException
+from fastapi.responses import Response
+import requests
+
 from fastapi.middleware.cors import CORSMiddleware
 from DFA import DFA
 
 import json
 import os
+from search_in_index import search_in_index
+
+
+
+
+app = FastAPI()
+
 
 # ----- Paths -----
 
@@ -126,64 +136,81 @@ def suggest_neighbors(doc_id, k=10):
 def root():
     return {"message": "DAAR Search Engine API: OK"}
 
+
+@app.get("/cover/{doc_id}")
+def get_cover(doc_id: int):
+    """
+    Télécharge la couverture depuis l'URL de Project Gutenberg
+    et la renvoie depuis le backend (pas de OpaqueResponseBlocking).
+    """
+    meta = metadata.get(str(doc_id))
+    if not meta:
+        raise HTTPException(status_code=404, detail="Unknown document")
+
+    url = meta.get("cover_url")
+    if not url:
+        raise HTTPException(status_code=404, detail="No cover image for this document")
+
+    try:
+        r = requests.get(url, timeout=5)
+        r.raise_for_status()
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Error fetching cover: {e}")
+
+    content_type = r.headers.get("Content-Type", "image/jpeg")
+    return Response(content=r.content, media_type=content_type)
+
+
 @app.get("/search")
-def api_search(q: str, page: int = 1, page_size: int = 9):
+def api_search(q: str):
+    docs = search_in_index(q) 
 
-    ranked = search_normal(q)
-    response = []
-
-    for doc_id, score in ranked[:20]:
-        meta = metadata.get(doc_id, {})
-        response.append({
+    results = []
+    for doc_id in docs:
+        meta = metadata.get(str(doc_id), {})
+        results.append({
             "doc_id": doc_id,
-            "score": score,
-            "title": meta.get("title"),
-            "author": meta.get("author"),
-            "year": meta.get("year"),
-            "downloads": meta.get("downloads"),
-            "cover_url": meta.get("cover_url"),
+            "title": meta.get("title", f"Doc {doc_id}"),
+            "author": meta.get("author", "Unknown"),
+            "cover_image": f"/cover/{doc_id}" if meta.get("cover_url") else None
         })
 
     return {
-        "total": len(ranked),
+        "query": q,
+        "total_results": len(results),
         "page": 1,
-        "page_size": len(response),
-        "results": response,
+        "page_size": len(results),
+        "results": results,
+        "is_regex": False,
     }
 
 
 @app.get("/search_regex")
-def api_search_regex(pattern: str, page: int = 1, page_size: int = 9):
-
+def api_search_regex(pattern: str):
     ranked = search_regex_engine(pattern)
 
-    # Pagination backend
-    start = (page - 1) * page_size
-    end = start + page_size
-    paginated = ranked[start:end]
+    # limiter à 20 résultats MAX
+    ranked = ranked[:20]
 
     results = []
-
-    for entry in paginated:
-        # entry vient de search_regex_engine : (doc_id, score)
-        doc_id = entry[0]
-        score = entry[1]
-
-        meta = metadata.get(str(doc_id), {})
-
+    for doc_id, score in ranked:
+        mid = str(doc_id)
+        meta = metadata.get(mid, {})
         results.append({
             "doc_id": doc_id,
-            "title": meta.get("title", "Unknown"),
-            "author": meta.get("author", "Unknown"),
-            "cover_image": meta.get("cover_url", None),
             "score": score,
+            "title": meta.get("title", f"Doc {doc_id}"),
+            "author": meta.get("author", "Unknown author"),
+            "cover_image": f"/cover/{doc_id}" if meta.get("cover_url") else None,
         })
 
     return {
-        "total": len(ranked),
-        "page": page,
-        "page_size": page_size,
+        "query": pattern,
+        "total_results": len(results),
+        "page": 1,
+        "page_size": len(results),
         "results": results,
+        "is_regex": True,
     }
 
 

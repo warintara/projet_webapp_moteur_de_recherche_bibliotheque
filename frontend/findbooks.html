@@ -2,31 +2,46 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <title>DAAR E-Book Search</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body class="center-page">
+<body class="search-page">
+    <h1 class="montype">DAAR E-Book Search</h1>
 
-    <div class="content-box">
-        <h1 class="montype">DAAR E-Book Search</h1>
-
-        <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="Tape une recherche...">
-            <button onclick="goSearch()">Search</button>
-        </div>
-
-        <p class="button back-btn" onclick="window.location.href='Index.html'">
-            Go back to main page
-        </p>
+    <div class="search-container">
+        <input
+            type="text"
+            id="searchInput"
+            class="search-input"
+            placeholder="Tape une recherche (texte ou RegEx)..."
+        >
+        <button class="button search-button" id="searchBtn">Search</button>
     </div>
 
+    <button class="button back-main-button" onclick="window.location.href='Index.html'">
+        Go back to main page
+    </button>
+
     <script>
+        const input = document.getElementById("searchInput");
+        const btn   = document.getElementById("searchBtn");
+
         function goSearch() {
-            const q = document.getElementById("searchInput").value.trim();
-            if (q.length === 0) return;
+            const q = input.value.trim();
+            if (!q) return;
+            // On redirige vers la page de résultats avec q et page=1
             window.location.href = "results.html?q=" + encodeURIComponent(q) + "&page=1";
         }
-    </script>
 
+        btn.addEventListener("click", goSearch);
+
+        // Enter dans la barre de recherche = lancer la recherche
+        input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                goSearch();
+            }
+        });
+    </script>
 </body>
 </html>
