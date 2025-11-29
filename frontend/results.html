@@ -3,123 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="style.css">
-    <title>Résultats — DAAR Search</title>
+    <title>Détails du livre — DAAR</title>
 </head>
 
 <body>
-    <h1 class="montype">Résultats de recherche</h1>
 
-    <!-- on remet la barre de recherche en haut des résultats -->
-    <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="Tape une recherche ou une RegEx...">
-        <button onclick="reloadSearch()">Search</button>
-    </div>
+    <div class="page-wrapper">
 
-    <div id="results" class="results-grid"></div>
+        <h1 class="montype">Détail du livre</h1>
 
-    <div class="pagination">
-        <button id="prevBtn">Précédent</button>
-        <span id="pageInfo"></span>
-        <button id="nextBtn">Suivant</button>
-    </div>
+        <div id="book-container" class="book-detail-container">
+            <p>Chargement...</p>
+        </div>
 
-    <p class="button" onclick="window.location.href='Index.html'">Go back to main page</p>
+        <h2 class="section-title">Suggestions</h2>
+
+        <div id="suggestions" class="suggestions-grid">
+            <p>Chargement...</p>
+        </div>
+
+        <p class="button" onclick="window.location.href='findbooks.html'">Retour à la recherche</p>
+
+    </div><!-- end page-wrapper -->
 
     <script>
-        const PAGE_SIZE = 18;
         const API_BASE = "http://127.0.0.1:8000";
 
-        let currentQuery = "";
-        let currentPage = 1;
-
         function getParam(name) {
-            const params = new URLSearchParams(window.location.search);
-            return params.get(name);
+            return new URLSearchParams(window.location.search).get(name);
         }
 
-        function looksLikeRegex(q) {
-            // très simple mais suffisant pour DAAR
-            return /[.*+?|()[\]\\]/.test(q);
-        }
+        async function loadBook() {
+            const docId = getParam("id");
+            if (!docId) return;
 
-        async function loadPage() {
-            currentQuery = getParam("q") || "";
-            currentPage = parseInt(getParam("page") || "1", 10);
-
-            document.getElementById("searchInput").value = currentQuery;
-
-            const isRegex = looksLikeRegex(currentQuery);
-
-            let url;
-            if (isRegex) {
-                url = `${API_BASE}/search_regex?pattern=${encodeURIComponent(currentQuery)}&page=${currentPage}&page_size=${PAGE_SIZE}`;
-            } else {
-                url = `${API_BASE}/search?q=${encodeURIComponent(currentQuery)}&page=${currentPage}&page_size=${PAGE_SIZE}`;
-            }
-
-            const res = await fetch(url);
+            const res = await fetch(`${API_BASE}/book/${docId}`);
             const data = await res.json();
-            renderResults(data);
+
+            const container = document.getElementById("book-container");
+
+            const imgSrc = data.cover_url
+                ? `${API_BASE}/cover/${docId}`
+                : "https://via.placeholder.com/200x300?text=No+Cover";
+
+            container.innerHTML = `
+                <div class="detail-wrapper">
+                    <img src="${imgSrc}" class="detail-cover">
+
+                    <div class="detail-info">
+                        <h2>${data.title}</h2>
+                        <p><strong>Auteur :</strong> ${data.author ?? "Inconnu"}</p>
+                        <p><strong>ID :</strong> ${docId}</p>
+                        <p><strong>Année :</strong> ${data.year ?? "?"}</p>
+                        <p><strong>Téléchargements :</strong> ${data.downloads ?? "?"}</p>
+
+                        <a href="https://www.gutenberg.org/ebooks/${docId}"
+                           target="_blank"
+                           class="read-button">
+                            📖 Lire ce livre
+                        </a>
+                    </div>
+                </div>
+            `;
         }
 
-        function renderResults(data) {
-            const container = document.getElementById("results");
+        async function loadSuggestions() {
+            const docId = getParam("id");
+            if (!docId) return;
+
+            const res = await fetch(`${API_BASE}/suggest/${docId}`);
+            const data = await res.json();
+
+            const container = document.getElementById("suggestions");
             container.innerHTML = "";
 
-            const books = data.results || [];
-            if (!books.length) {
-                container.innerHTML = "<p>Aucun résultat trouvé.</p>";
-                document.getElementById("pageInfo").textContent = "";
+            if (!data.length) {
+                container.innerHTML = "<p>Aucune suggestion trouvée.</p>";
                 return;
             }
 
-            books.forEach(book => {
-                const card = document.createElement("div");
-                card.className = "book-card";
+            data.forEach(book => {
+                const imgSrc = book.cover_url
+                    ? `${API_BASE}/cover/${book.doc_id}`
+                    : "https://via.placeholder.com/100x150?text=No+Cover";
 
-                const imgSrc = book.cover_image
-                    ? `${API_BASE}${book.cover_image}`
-                    : "https://via.placeholder.com/120x180?text=No+Cover";
+                const div = document.createElement("div");
+                div.className = "suggest-card";
+                div.onclick = () => {
+                    window.location.href = `detail.html?id=${book.doc_id}`;
+                };
 
-                card.innerHTML = `
-                    <img src="${imgSrc}" alt="cover">
-                    <div class="book-title">${book.title || "(sans titre)"}</div>
-                    <div class="book-meta"><strong>ID :</strong> ${book.doc_id}</div>
-                    <div class="book-meta"><strong>Auteur :</strong> ${book.author || "Unknown author"}</div>
+                div.innerHTML = `
+                    <img src="${imgSrc}" class="suggest-cover">
+                    <div class="suggest-title">${book.title}</div>
+                    <div class="suggest-meta">${book.author ?? "Inconnu"}</div>
                 `;
 
-                container.appendChild(card);
+                container.appendChild(div);
             });
-
-            const total = data.total_results ?? books.length;
-            const nbPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-
-            document.getElementById("pageInfo").textContent = `Page ${data.page} / ${nbPages}`;
-
-            document.getElementById("prevBtn").disabled = (data.page <= 1);
-            document.getElementById("nextBtn").disabled = (data.page >= nbPages);
-
-            document.getElementById("prevBtn").onclick = () => changePage(data.page - 1);
-            document.getElementById("nextBtn").onclick = () => changePage(data.page + 1);
         }
 
-        function changePage(newPage) {
-            const params = new URLSearchParams(window.location.search);
-            params.set("page", newPage);
-            window.location.search = params.toString();
-        }
-
-        function reloadSearch() {
-            const q = document.getElementById("searchInput").value.trim();
-            if (!q) return;
-            const params = new URLSearchParams();
-            params.set("q", q);
-            params.set("page", "1");
-            window.location.search = params.toString();
-        }
-
-        // premier chargement
-        loadPage();
+        loadBook();
+        loadSuggestions();
     </script>
 
 </body>

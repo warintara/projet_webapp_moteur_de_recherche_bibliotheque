@@ -73,22 +73,59 @@ pyhton3 build_graph_jaccard
          └────────────────────────┘
 ```
 
-### 5. Tester les fonctions 
-#### Pour app.py Depuis mySearchEngine :
+# Tests du Projet DAAR – Moteur de Recherche
+
+Ce dossier contient l'ensemble des scripts permettant de tester notre application web
+de moteur de recherche de bibliothèque (Projet 3 – DAAR).
+
+Les tests sont organisés selon trois catégories :
+
+---
+
+## 1. Tests fonctionnels
+
+Scripts :
+
+- `test_search_basic.py`  
+  → Vérifie la recherche simple par mot-clé.
+
+- `test_search_regex.py`  
+  → Vérifie la recherche avancée via expressions régulières.
+
+- `test_ranking_centrality.py`  
+  → Vérifie la cohérence du classement par centralité (Pagerank ou autre).
+
+---
+
+## 2. Tests de performance
+
+Scripts :
+
+- `test_performance_search.py`  
+  → Mesure le temps de la recherche simple.
+
+- `test_performance_regex.py`  
+  → Mesure les temps de réponse pour les recherches RegEx.
+
+- `test_performance_centrality.py`  
+  → Mesure le temps de calcul de l'indice de centralité.
+
+---
+
+## 3. Utilitaires
+
+- `utils.py`  
+  → Contient les fonctions communes : appel API, mesure de temps, URL du backend.
+
+---
+
+## ▶ Exécution des tests
+
+### Option 1 — Lancer un test spécifique  
 ```bash
-uvicorn app:app --reload
+python3 test_search_basic.py
 ```
-on peut tester :
-
-http://127.0.0.1:8000/search?q=dragon
-
-http://127.0.0.1:8000/search_regex?pattern=dr.*n
-
-http://127.0.0.1:8000/book/52
-
-http://127.0.0.1:8000/suggest/52
-
-ou partir sur le site à partir du fichier 
-```
-index.html
+### Option 2 — Lancer tous les tests automatiquement
+```bash
+python3 run_all_tests.py
 ```
