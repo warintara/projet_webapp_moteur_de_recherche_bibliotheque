@@ -4,6 +4,7 @@ import requests
 
 from fastapi.middleware.cors import CORSMiddleware
 from DFA import DFA
+import math
 
 import json
 import os
@@ -162,11 +163,22 @@ def get_cover(doc_id: int):
 
 
 @app.get("/search")
-def api_search(q: str):
-    docs = search_in_index(q) 
+def api_search(
+    q: str,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(18, ge=1, le=60)
+):
+    docs = search_in_index(q)  # renvoie une liste de doc_ids (max 20)
+
+    total = len(docs)
+
+    # Pagination réelle
+    start = (page - 1) * page_size
+    end = start + page_size
+    slice_docs = docs[start:end]
 
     results = []
-    for doc_id in docs:
+    for doc_id in slice_docs:
         meta = metadata.get(str(doc_id), {})
         results.append({
             "doc_id": doc_id,
@@ -177,38 +189,47 @@ def api_search(q: str):
 
     return {
         "query": q,
-        "total_results": len(results),
-        "page": 1,
-        "page_size": len(results),
+        "total_results": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": max(1, math.ceil(total / page_size)),
         "results": results,
         "is_regex": False,
     }
 
 
-@app.get("/search_regex")
-def api_search_regex(pattern: str):
-    ranked = search_regex_engine(pattern)
 
-    # limiter à 20 résultats MAX
-    ranked = ranked[:20]
+@app.get("/search_regex")
+def api_search_regex(
+    pattern: str,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(18, ge=1, le=60)
+):
+    ranked = search_regex_engine(pattern)[:20]  # top 20
+    total = len(ranked)
+
+    # Pagination réelle
+    start = (page - 1) * page_size
+    end = start + page_size
+    slice_docs = ranked[start:end]
 
     results = []
-    for doc_id, score in ranked:
-        mid = str(doc_id)
-        meta = metadata.get(mid, {})
+    for doc_id, score in slice_docs:
+        meta = metadata.get(str(doc_id), {})
         results.append({
             "doc_id": doc_id,
-            "score": score,
             "title": meta.get("title", f"Doc {doc_id}"),
             "author": meta.get("author", "Unknown author"),
+            "score": score,
             "cover_image": f"/cover/{doc_id}" if meta.get("cover_url") else None,
         })
 
     return {
         "query": pattern,
-        "total_results": len(results),
-        "page": 1,
-        "page_size": len(results),
+        "page": page,
+        "page_size": page_size,
+        "total_results": total,
+        "total_pages": max(1, math.ceil(total / page_size)),
         "results": results,
         "is_regex": True,
     }

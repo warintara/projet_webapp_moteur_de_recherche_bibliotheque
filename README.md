@@ -20,9 +20,12 @@ source myDAARenv/bin/activate
 cd mySearchEngine/
 python3 manage.py runserver
 ```
-### 4. Téléchargement les livres en anglais (si ce n'est pas déjà fait)
+### 4. Constructions des index, metadata et graph de Jaccard si c'est pas déjà fait
 ```bash
-python3 download_gutenberg_fr.py
+cd mySearchEngine
+python3 buid_index2.py
+python3 buid_metadata2.py
+pyhton3 build_graph_jaccard
 ```
 
 ## Le schéma général
@@ -84,3 +87,8 @@ http://127.0.0.1:8000/search_regex?pattern=dr.*n
 http://127.0.0.1:8000/book/52
 
 http://127.0.0.1:8000/suggest/52
+
+ou partir sur le site à partir du fichier 
+```
+index.html
+```
