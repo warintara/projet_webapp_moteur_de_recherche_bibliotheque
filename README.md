@@ -4,45 +4,38 @@
 ## Installation et environnement
 
 Ce projet utilise un backend Python et nécessite un environnement virtuel.
-Le backend peut être exécuté de deux façons suivant ta version du projet :
-
-soit via Django + Django REST Framework
-
-soit via FastAPI (pour les tests et endpoints modernes)
+Le backend est exécuté via FastAPI (pour les tests et endpoints modernes)
 
 Le README ci-dessous est harmonisé pour supporter les deux cas.
 
 Création de l’environnement virtuel
+```bash
 python3 -m venv myDAARenv
 source myDAARenv/bin/activate
 pip install -r requirements.txt
+```
 
 Entrer dans l’environnement (si déjà créé)
+```bash
 source myDAARenv/bin/activate
-
-Lancer le serveur backend
-
-Cas 1 — Backend Django :
-cd mySearchEngine
-python3 manage.py runserver
-
-Cas 2 — Backend FastAPI (recommandé pour les tests) :
+```
+Lancer le serveur backend Backend FastAPI:
+```
 uvicorn app:app --reload
-Ton API sera alors disponible sur : http://127.0.0.1:8000
+```
+L'API sera alors disponible sur : http://127.0.0.1:8000
 
 Construire les index, metadata et graphe de Jaccard
+```bash
 cd mySearchEngine
 python3 build_index2.py
 python3 build_metadata2.py
 python3 build_graph_jaccard.py
-
-(Assure-toi que ces scripts ont bien généré :
-
-l’index des mots
-
-les métadonnées (longueur, résumé, etc.)
-
-le graphe de similarité Jaccard
+```
+(Assurez-vous que ces scripts ont bien généré :
+-l’index des mots
+-les métadonnées (longueur, résumé, etc.)
+-le graphe de similarité Jaccard
 avant de tester la recherche.)
 
 ## Le schéma général
@@ -76,87 +69,80 @@ Appliquer les algorithmes KMP ou Aho-Ullman
 ```
 ## Tests du Projet DAAR – Moteur de Recherche
 
-Ce dossier contient l’ensemble des scripts permettant de tester l’application web du moteur de recherche (Projet DAAR 2025).
-Les tests sont organisés selon trois catégories.
+Le dossier /tests contient l’ensemble des scripts permettant de tester l’application web du moteur de recherche (Projet DAAR 2025).
 
-### Tests fonctionnels
-
-Scripts :
-
-test_search_basic.py
-Vérifie la recherche simple par mot-clé via l’endpoint /search?q=mot.
-
-test_search_regex.py
-Vérifie la recherche avancée via expressions régulières avec /search_regex?pattern=regex.
-
-test_ranking_centrality.py
-Vérifie la cohérence du classement en utilisant les scores de centralité (exemple : Pagerank construit à partir du graphe de Jaccard).
-
-test_suggestion.py
-Test supplémentaire important.
-Compare automatiquement :
-
-la version CLI via : python3 suggest_books.py <id>
-
-la version API FastAPI via : /suggest/<id>
-Ce test permet de vérifier la cohérence et l’accuracy entre la logique interne (CLI) et la logique exposée via l’API.
-
-### Tests de performance
-
-Scripts :
-
-test_performance_search.py
-Mesure le temps d’exécution pour une recherche simple.
-
-test_performance_regex.py
-Mesure le temps de réponse aux recherches utilisant des expressions régulières.
-
-test_performance_centrality.py
-Mesure le temps de calcul de l’indice de centralité (ex : recalcul du Pagerank si exposé).
-
-### Utilitaires
-
-utils.py
-Fichier central pour :
-
-gérer l’adresse du backend (BASE_URL = http://127.0.0.1:8000
-
-)
-
-envoyer des requêtes API
-
-mesurer le temps d’exécution
-
-simplifier les appels dans les tests
-
-### Exécution des tests
-
-Option 1 : lancer un test spécifique
-python3 test_search_basic.py
-
-Option 2 : lancer automatiquement tous les tests
-python3 run_all_tests.py
-
-(run_all_tests.py détecte tous les fichiers commençant par test_*.py et les exécute un à un.)
-
-### Tester l'application dans l’interface web
-
-Pour tester manuellement les fonctionnalités :
-
-Lancer le serveur FastAPI :
+Avant de tester, il faut lancer : 
+```bash
 uvicorn app:app --reload
+```
+### Recherche simple
+Script : test_search_basic.py
+Compare :
+       - Résultat CLI (search_in_index.py)
+       - Résultat API (/search)
+       - Cohérence des doc_id
+       - Temps d’exécution (CLI / API / pagination)
+→ Log dans perf_search.txt.
+Exécution :
+```bash
+python3 test_search_basic.py
+```
+#### Recherche RegEx
+Script : test_search_regex.py
+Mesure :
+       - CLI vs API (/search_regex)
+       - Pagination
+       - Différences éventuelles
+       - Performances
+→ Log dans perf_regex.txt.
+Exécution :
+```bash
+python3 test_search_regex.py
+```
+#### Centralité
+Script : test_centrality.py
+Teste :
+       - Lecture de centrality.json
+       - Extraction du Top N
+       - Temps moyen de chargement.
+→ Log dans perf_centrality.txt.
+Exécution :
+```bash
+python3 test_centrality.py
+```
+#### Suggestions (graphe de Jaccard)
+Script : test_suggestion.py
+Teste :
+       - CLI vs API (/suggest/<id>)
+       - Cohérence des doc_id
+       - Temps API et CLI.
+Exécution :
+```bash
+python3 test_suggestion.py
+```
+### Lancer tous les tests
 
-Aller sur les URLs suivantes :
+Script : run_all_tests.py
+Exécution :
+```bash
+python3 run_all_tests.py.py
+```
+Détecte et exécute automatiquement tous les fichiers test_*.py.
 
-Recherche simple :
-http://127.0.0.1:8000/search?q=dragon
 
-Recherche RegEx :
-http://127.0.0.1:8000/search_regex?pattern=dr.*n
-Affichage des détails d’un livre :
-http://127.0.0.1:8000/book/52
-Suggestions basées sur le graphe Jaccard :
-http://127.0.0.1:8000/suggest/52
+### Tests via l’interface Web
+Avant de tester, il faut lancer : 
+```bash
+uvicorn app:app --reload
+```
+URLs utiles :
 
-Interface web (frontend)
-Ouvrir simplement le fichier index.html du dossier frontend dans un navigateur pour accéder à la webapp graphique.
+http://127.0.0.1:8000/search?q=mot
+
+http://127.0.0.1:8000/search_regex?pattern=...
+
+http://127.0.0.1:8000/book/<id>
+
+http://127.0.0.1:8000/suggest/<id>
+
+Pour tester Frontend : ouvrir frontend/index.html.
