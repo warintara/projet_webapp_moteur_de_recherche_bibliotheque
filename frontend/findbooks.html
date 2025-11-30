@@ -27,27 +27,47 @@
         </div>
 
     </div>
+<script>
+    const input = document.getElementById("searchInput");
+    const btn   = document.getElementById("searchBtn");
 
-    <script>
-        const input = document.getElementById("searchInput");
-        const btn   = document.getElementById("searchBtn");
+    // Détection : regex si contient un opérateur
+    function isRegex(q) {
+        const specials = new Set(['*', '+', '|', '.', '(', ')']);
+        for (const c of q) if (specials.has(c)) return true;
+        return false;
+    }
 
-        function goSearch() {
-            const q = input.value.trim();
-            if (!q) return;
-            // On redirige vers la page de résultats avec q et page=1
-            window.location.href = "results.html?q=" + encodeURIComponent(q) + "&page=1";
-        }
+    // Fonction de nettoyage : supprime les accents morts et caractères UTF invisibles
+    function cleanString(str) {
+        return str
+            .normalize("NFKD")                      // décompose les accents
+            .replace(/[\u0300-\u036f]/g, "")        // supprime les accents morts
+            .replace(/[\u0000-\u001F\u007F]/g, "")  // supprime caractères de contrôle
+            .replace(/[^\x20-\x7E]/g, "");          // supprime UTF-8 non imprimables
+    }
 
-        btn.addEventListener("click", goSearch);
+    function goSearch() {
+        let q = input.value.trim();
+        if (!q) return;
 
-        // Enter dans la barre de recherche = lancer la recherche
-        input.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") {
-                goSearch();
-            }
-        });
-    </script>
+        q = cleanString(q);
+
+        const isR = isRegex(q);
+
+        window.location.href =
+            "results.html?q=" + encodeURIComponent(q) +
+            "&regex=" + (isR ? "1" : "0") +
+            "&page=1";
+    }
+
+    btn.addEventListener("click", goSearch);
+
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") goSearch();
+    });
+</script>
+
 </div>
 </body>
 </html>

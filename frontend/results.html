@@ -2,110 +2,137 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <title>Résultats — DAAR</title>
     <link rel="stylesheet" href="style.css">
-    <title>Détails du livre — DAAR</title>
 </head>
 
 <body>
 
-    <div class="page-wrapper">
+<div class="page-wrapper">
 
-        <h1 class="montype">Détail du livre</h1>
+    <h1 class="montype">Résultats de la recherche</h1>
 
-        <div id="book-container" class="book-detail-container">
-            <p>Chargement...</p>
-        </div>
+    <!-- BARRE DE RECHERCHE -->
+    <div class="search-container" style="margin-bottom:30px; text-align:center;">
+        <input type="text" id="searchInput" class="search-input"
+            placeholder="Tape une recherche (texte ou RegEx)...">
+        <button class="button search-button" id="searchBtn">Rechercher</button>
+    </div>
 
-        <h2 class="section-title">Suggestions</h2>
+    <!-- INDICATEUR DE PAGE -->
+    <p id="page-indicator" style="text-align:center; font-size:18px; margin-top:-10px;"></p>
 
-        <div id="suggestions" class="suggestions-grid">
-            <p>Chargement...</p>
-        </div>
+    <!-- RÉSULTATS -->
+    <div id="results" class="results-grid">
+        <p>Chargement...</p>
+    </div>
 
-        <p class="button" onclick="window.location.href='findbooks.html'">Retour à la recherche</p>
+    <!-- PAGINATION -->
+    <div id="pagination" class="pagination"></div>
 
-    </div><!-- end page-wrapper -->
+    <p class="button" onclick="window.location.href='findbooks.html'">Retour à la recherche</p>
 
-    <script>
-        const API_BASE = "http://127.0.0.1:8000";
+</div>
 
-        function getParam(name) {
-            return new URLSearchParams(window.location.search).get(name);
+<script>
+const API_BASE = "http://127.0.0.1:8000";
+
+function getParam(name) {
+    return new URLSearchParams(window.location.search).get(name);
+}
+
+document.getElementById("searchBtn").onclick = () => {
+    const q = document.getElementById("searchInput").value.trim();
+    if (q) window.location.href = "results.html?q=" + encodeURIComponent(q) + "&page=1";
+};
+
+document.getElementById("searchInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") document.getElementById("searchBtn").click();
+});
+
+async function loadResults() {
+    const q = getParam("q");
+    const page = Number(getParam("page")) || 1;
+
+    document.getElementById("searchInput").value = q ?? "";
+
+    const res = await fetch(`${API_BASE}/search?q=${encodeURIComponent(q)}&page=${page}`);
+
+    const container = document.getElementById("results");
+    const indicator = document.getElementById("page-indicator");
+
+    if (!res.ok) {
+        container.innerHTML = "<p style='color:red'>Erreur lors du chargement.</p>";
+        return;
+    }
+
+    const data = await res.json();
+    const books = Array.isArray(data) ? data : data.results;
+
+    if (!books || books.length === 0) {
+        container.innerHTML = "<p>Aucun résultat trouvé.</p>";
+        indicator.textContent = "";
+        return;
+    }
+
+    container.innerHTML = "";
+    indicator.textContent = `Page ${page}`;
+
+    books.forEach(book => {
+        // Récupération intelligente de la couverture
+        let imgSrc;
+
+        if (book.cover_url) {
+            imgSrc = book.cover_url;
+        } else {
+            // couverture generée automatiquement
+            imgSrc = `https://www.gutenberg.org/cache/epub/${book.doc_id}/pg${book.doc_id}.cover.medium.jpg`;
         }
 
-        async function loadBook() {
-            const docId = getParam("id");
-            if (!docId) return;
+        const card = document.createElement("div");
+        card.className = "book-card";
+        card.onclick = () => {
+            window.location.href = `detail.html?id=${book.doc_id}`;
+        };
 
-            const res = await fetch(`${API_BASE}/book/${docId}`);
-            const data = await res.json();
+        card.innerHTML = `
+            <img src="${imgSrc}">
+            <h3>${book.title}</h3>
+            <p>${book.author ?? "Inconnu"}</p>
+        `;
 
-            const container = document.getElementById("book-container");
+        container.appendChild(card);
+    });
 
-            const imgSrc = data.cover_url
-                ? `${API_BASE}/cover/${docId}`
-                : "https://via.placeholder.com/200x300?text=No+Cover";
+    // PAGINATION
+    const pagination = document.getElementById("pagination");
+    pagination.innerHTML = "";
 
-            container.innerHTML = `
-                <div class="detail-wrapper">
-                    <img src="${imgSrc}" class="detail-cover">
+    // Nombre total de pages renvoyé par l’API
+    const totalPages = data.total_pages;
+    
+    // Bouton Précédent
+    if (page > 1) {
+        const prev = document.createElement("button");
+        prev.textContent = "Précédent";
+        prev.onclick = () =>
+            window.location.href = `results.html?q=${encodeURIComponent(q)}&page=${page - 1}`;
+        pagination.appendChild(prev);
+    }
+    
+    // Bouton Suivant
+    if (page < totalPages) {
+        const next = document.createElement("button");
+        next.textContent = "Suivant";
+        next.onclick = () =>
+            window.location.href = `results.html?q=${encodeURIComponent(q)}&page=${page + 1}`;
+        pagination.appendChild(next);
+    }
+    
+}
 
-                    <div class="detail-info">
-                        <h2>${data.title}</h2>
-                        <p><strong>Auteur :</strong> ${data.author ?? "Inconnu"}</p>
-                        <p><strong>ID :</strong> ${docId}</p>
-                        <p><strong>Année :</strong> ${data.year ?? "?"}</p>
-                        <p><strong>Téléchargements :</strong> ${data.downloads ?? "?"}</p>
-
-                        <a href="https://www.gutenberg.org/ebooks/${docId}"
-                           target="_blank"
-                           class="read-button">
-                            📖 Lire ce livre
-                        </a>
-                    </div>
-                </div>
-            `;
-        }
-
-        async function loadSuggestions() {
-            const docId = getParam("id");
-            if (!docId) return;
-
-            const res = await fetch(`${API_BASE}/suggest/${docId}`);
-            const data = await res.json();
-
-            const container = document.getElementById("suggestions");
-            container.innerHTML = "";
-
-            if (!data.length) {
-                container.innerHTML = "<p>Aucune suggestion trouvée.</p>";
-                return;
-            }
-
-            data.forEach(book => {
-                const imgSrc = book.cover_url
-                    ? `${API_BASE}/cover/${book.doc_id}`
-                    : "https://via.placeholder.com/100x150?text=No+Cover";
-
-                const div = document.createElement("div");
-                div.className = "suggest-card";
-                div.onclick = () => {
-                    window.location.href = `detail.html?id=${book.doc_id}`;
-                };
-
-                div.innerHTML = `
-                    <img src="${imgSrc}" class="suggest-cover">
-                    <div class="suggest-title">${book.title}</div>
-                    <div class="suggest-meta">${book.author ?? "Inconnu"}</div>
-                `;
-
-                container.appendChild(div);
-            });
-        }
-
-        loadBook();
-        loadSuggestions();
-    </script>
+loadResults();
+</script>
 
 </body>
 </html>
